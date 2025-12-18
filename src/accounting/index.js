@@ -88,12 +88,13 @@ class Operations {
      * @returns {number} Validated amount
      */
     getAmountInput(prompt) {
+        const MAX_AMOUNT = 999999.99; // Match COBOL PIC 9(6)V99 limit
         let amount;
         do {
             const input = readlineSync.question(prompt);
             amount = parseFloat(input);
-            if (isNaN(amount) || amount < 0) {
-                console.log('Invalid amount. Please enter a positive number.');
+            if (isNaN(amount) || !Number.isFinite(amount) || amount < 0 || amount > MAX_AMOUNT) {
+                console.log(`Invalid amount. Please enter a positive number between 0 and ${MAX_AMOUNT}.`);
                 amount = -1;
             }
         } while (amount < 0);
@@ -102,6 +103,9 @@ class Operations {
 
     /**
      * Format balance to match COBOL output format (6 digits + 2 decimals)
+     * COBOL PIC 9(6)V99 format: displays as 9 characters total (e.g., 001000.00)
+     * Note: This matches the COBOL behavior which also has display limitations
+     * for amounts exceeding 999,999.99
      * @param {number} balance - Balance to format
      * @returns {string} Formatted balance
      */

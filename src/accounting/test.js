@@ -3,6 +3,9 @@
 /**
  * Automated test script for the Student Account Management System
  * Tests all functionality to match the COBOL legacy system behavior
+ * 
+ * Note: This uses console.assert for simplicity in demonstration.
+ * For production use, consider using a proper testing framework like Jest or Mocha.
  */
 
 const { MainProgram, Operations, DataProgram } = require('./index.js');
