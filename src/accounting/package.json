@@ -1,0 +1,17 @@
+{
+  "name": "account-management",
+  "version": "1.0.0",
+  "description": "Account Management System - Modernized from COBOL",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test.js",
+    "test:interactive": "node test-interactive.js"
+  },
+  "keywords": ["accounting", "management"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "readline-sync": "^1.4.10"
+  }
+}
