@@ -131,13 +131,20 @@ class Operations {
     /**
      * Format balance to match COBOL output format (6 digits + 2 decimals)
      * COBOL PIC 9(6)V99 format: displays as 9 characters total (e.g., 001000.00)
-     * Note: This matches the COBOL behavior which also has display limitations
-     * for amounts exceeding 999,999.99
+     * Values greater than the COBOL maximum of 999,999.99 are capped at that limit
+     * for display purposes to preserve the fixed-width format.
      * @param {number} balance - Balance to format
      * @returns {string} Formatted balance
      */
     formatBalance(balance) {
-        return balance.toFixed(2).padStart(9, '0');
+        const MAX_BALANCE = 999999.99; // COBOL PIC 9(6)V99 maximum
+
+        if (!Number.isFinite(balance) || balance < 0) {
+            throw new Error('Invalid balance value for formatting.');
+        }
+
+        const cappedBalance = Math.min(balance, MAX_BALANCE);
+        return cappedBalance.toFixed(2).padStart(9, '0');
     }
 }
 
