@@ -31,7 +31,6 @@ console.log('✓ Test 2 Passed\n');
 // Test 3: Credit Operation
 console.log('Test 3: Credit Operation');
 const dataProgram3 = new DataProgram();
-const operations3 = new Operations(dataProgram3);
 console.log('Simulating credit of 500.00');
 const beforeCredit = dataProgram3.read();
 dataProgram3.write(beforeCredit + 500.00);
