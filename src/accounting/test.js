@@ -8,7 +8,7 @@
  * For production use, consider using a proper testing framework like Jest or Mocha.
  */
 
-const { MainProgram, Operations, DataProgram } = require('./index.js');
+const { Operations, DataProgram } = require('./index.js');
 
 console.log('=== Starting Automated Tests ===\n');
 
