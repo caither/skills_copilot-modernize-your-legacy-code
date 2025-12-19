@@ -286,7 +286,7 @@ All original business rules are preserved:
 ✓ **Decimal Precision**: All amounts stored/displayed with 2 decimals
 ✓ **Menu Options**: Same 4 options (View, Credit, Debit, Exit)
 ✓ **Input Validation**: Invalid menu choices show error message
-✓ **Balance Limits**: Maximum 999,999.99 (matches COBOL PIC 9(6)V99)
+✓ **Amount Limits**: Maximum single transaction amount 999,999.99 (matches COBOL PIC 9(6)V99; resulting balance may exceed this)
 
 ## Improvements in Node.js Version
 
