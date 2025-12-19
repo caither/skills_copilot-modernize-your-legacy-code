@@ -120,7 +120,12 @@ class AccountManager {
    * @returns {string} Formatted balance string (9 characters)
    */
   formatBalance(balance) {
-    const balanceStr = balance.toFixed(2);
+    const MAX_BALANCE = 999999.99;
+    if (!Number.isFinite(balance) || balance < 0) {
+      throw new Error('Invalid balance value for formatting.');
+    }
+    const capped = Math.min(balance, MAX_BALANCE);
+    const balanceStr = capped.toFixed(2);
     const [whole, decimal] = balanceStr.split('.');
     const paddedWhole = whole.padStart(6, '0');
     return `${paddedWhole}.${decimal}`;

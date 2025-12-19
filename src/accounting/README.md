@@ -95,43 +95,91 @@ Exiting the program. Goodbye!
 
 ## Architecture
 
-The application follows a three-layer architecture matching the original COBOL design:
+The application has been refactored to use a **single source of business logic** with a clean separation of concerns:
 
-### 1. **MainProgram** (main.cob equivalent)
-- User interface layer
-- Menu display and input handling
-- Program flow control
+### **Core Library: AccountManager** (Business Logic)
+- **Location**: `AccountManager.js`
+- **Responsibility**: Pure business logic (viewBalance, creditAccount, debitAccount, formatBalance)
+- **Design**: Stateless methods, structured return values (success, message, balance)
+- **Reusability**: Can be imported and used by any client (CLI, API, tests)
+- **No Dependencies**: Does not depend on readline-sync or console I/O
 
-### 2. **Operations** (operations.cob equivalent)
-- Business logic layer
-- Implements TOTAL, CREDIT, and DEBIT operations
-- Validates transactions
+### **CLI Interface: MainProgram** (User Interface)
+- **Location**: `index.js`
+- **Responsibility**: Menu-driven CLI interface
+- **Design**: Directly uses `AccountManager` for all business logic
+- **Features**: User input validation, interactive menu, formatted output
 
-### 3. **DataProgram** (data.cob equivalent)
-- Data access layer
-- Manages account balance storage
-- Provides READ and WRITE operations
+### **Legacy Adapters** (Backward Compatibility)
+- **DataProgram** & **Operations** classes in `index.js` act as thin wrappers that delegate to `AccountManager`
+- **Purpose**: Maintain test compatibility with existing test suite
+- **Implementation**: All logic is delegated to the library; these are non-functional pass-throughs
 
 ## Data Flow
 
 ```
-User Input → MainProgram → Operations → DataProgram → Storage
-                ↓              ↓
-           Display Menu   Business Logic
-                           Validation
+┌─────────────────────┐
+│   User Input        │
+│   (CLI Prompt)      │
+└──────────┬──────────┘
+           │
+           ↓
+┌──────────────────────────────┐
+│   MainProgram (index.js)     │  ← UI/CLI Layer
+│   - Display Menu             │
+│   - Get User Input           │
+│   - Validate Amount Input    │
+└──────────┬───────────────────┘
+           │
+           ↓ delegates
+┌──────────────────────────────┐
+│   AccountManager Library     │  ← Business Logic Layer
+│   - viewBalance()            │
+│   - creditAccount(amount)    │
+│   - debitAccount(amount)     │
+│   - formatBalance(amount)    │
+└──────────┬───────────────────┘
+           │
+           ↓
+┌──────────────────────────────┐
+│   In-Memory Storage          │  ← Data Layer
+│   - this.balance             │
+└──────────────────────────────┘
 ```
+
+## Module Structure
+
+| File | Class | Role | Used By |
+|------|-------|------|---------|
+| `AccountManager.js` | AccountManager | Pure business logic library | MainProgram, Tests, DataProgram (adapter), Operations (adapter) |
+| `index.js` | MainProgram | CLI menu-driven interface | Entry point (`npm start`) |
+| `index.js` | DataProgram | Legacy adapter for tests | Test suite compatibility |
+| `index.js` | Operations | Legacy adapter for tests | Test suite compatibility |
 
 ## Migration Notes
 
-This Node.js application is a direct modernization of the COBOL system with the following equivalences:
+This Node.js application is a modernized version of the COBOL system with:
 
-| COBOL Program | Node.js Class | Purpose |
-|--------------|---------------|---------|
-| main.cob | MainProgram | User interface and menu |
-| operations.cob | Operations | Business logic operations |
-| data.cob | DataProgram | Data storage management |
+### Architecture Equivalence
+| COBOL Program | COBOL Purpose | Node.js Implementation | Role |
+|---|---|---|---|
+| main.cob | Menu UI & flow control | MainProgram class | CLI entry point using AccountManager |
+| operations.cob | Business logic operations | AccountManager class | Pure library with no I/O dependencies |
+| data.cob | Data storage | AccountManager.balance | Property in library instance |
 
-All original business logic, data integrity rules, and menu options have been preserved.
+### Key Modernizations
+1. **Single Source of Truth**: All business logic consolidated in `AccountManager.js`
+2. **Separation of Concerns**: UI logic completely separated from business logic
+3. **Reusability**: AccountManager can be imported by any client (CLI, API, tests)
+4. **Testability**: Pure functions with no external dependencies make testing simpler
+5. **Backward Compatibility**: Thin adapters preserve existing test interfaces
+
+### Preserved Business Rules
+- ✅ Initial balance: 1000.00
+- ✅ 2 decimal precision for all amounts
+- ✅ Overdraft protection (no negative balances)
+- ✅ Balance range: 0.00 to 999,999.99
+- ✅ COBOL-style formatted output (6-digit padded whole + 2 decimals)
 
 ## License
 

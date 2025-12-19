@@ -1,12 +1,24 @@
-# COBOL 舊系統文檔
+# COBOL 舊系統文檔 → Node.js 現代化實作
 
 ## 系統概述
 
-這是一個使用 COBOL 編寫的學生帳戶管理系統，提供基本的帳戶餘額查詢、存款（入帳）和提款（扣款）功能。系統採用模組化設計，由三個主要程式組成。
+這是一個原本以 COBOL 編寫的學生帳戶管理系統，現已現代化為 Node.js 應用程式。系統提供基本的帳戶餘額查詢、存款（入帳）和提款（扣款）功能，採用模組化設計。
+
+### 舊系統 (COBOL) vs 新系統 (Node.js)
+
+| 面向 | COBOL 原系統 | Node.js 現代化版本 |
+|---|---|---|
+| **程式語言** | COBOL | JavaScript (Node.js) |
+| **架構** | 三個獨立程式 (main.cob, operations.cob, data.cob) | 單一 library (`AccountManager.js`) + CLI (`MainProgram`) |
+| **業務邏輯** | 分散在 operations.cob | 統一在 `AccountManager.js` |
+| **UI層** | main.cob 內的菜單邏輯 | `MainProgram` 類 (index.js) |
+| **資料層** | data.cob 中的記憶體儲存 | `AccountManager.balance` 屬性 |
+| **重用性** | 需要編譯並 CALL 其他程式 | 直接 import `AccountManager` 類 |
+| **測試** | 手動或外部測試工具 | Jest 單元測試 + Jest 整合測試 |
 
 ---
 
-## 程式檔案說明
+## 程式檔案說明 (COBOL 原系統)
 
 ### 1. main.cob - 主程式
 
@@ -121,7 +133,291 @@
 
 ---
 
-## 學生帳戶業務規則總結
+## Node.js 現代化實作
+
+### 檔案結構
+
+```
+src/accounting/
+├── AccountManager.js          ← 核心業務邏輯庫 (pure library)
+├── index.js                   ← CLI 入口點 + 測試適配器
+├── AccountManager.test.js     ← 單元測試
+├── index.test.js              ← 整合測試
+├── package.json
+└── README.md
+```
+
+### 核心設計：AccountManager 庫
+
+**檔案**: `src/accounting/AccountManager.js`
+
+`AccountManager` 是統一的業務邏輯庫，取代了原 COBOL 的 operations.cob 和 data.cob 的邏輯：
+
+#### 公開介面
+
+```javascript
+class AccountManager {
+  constructor(initialBalance = 1000.00)
+  
+  // 查詢
+  viewBalance()  // 返回當前餘額
+  
+  // 交易
+  creditAccount(amount)   // 存入，返回 {success, message, balance}
+  debitAccount(amount)    // 提款，返回 {success, message, balance}
+  
+  // 工具
+  formatBalance(balance)  // 格式化為 COBOL 風格 (9 字元：6 位整數 + 小數點 + 2 位小數)
+  resetBalance(initialBalance)  // 重設餘額
+}
+```
+
+#### 設計特點
+- **零依賴**: 不依賴 readline-sync 或任何 I/O 庫
+- **結構化返回**: 所有交易返回 `{success, message, balance}` 物件
+- **業務驗證**: 內建驗證邏輯（如防止透支、格式驗證）
+- **可重用**: 可被 CLI、API、測試等任何客戶端使用
+
+### CLI 入口點：MainProgram
+
+**檔案**: `src/accounting/index.js`
+
+`MainProgram` 類實現互動式菜單，直接使用 `AccountManager` 進行所有業務邏輯：
+
+```javascript
+class MainProgram {
+  constructor()     // 初始化 AccountManager 實例
+  displayMenu()     // 顯示菜單，取得使用者選擇
+  run()            // 主迴圈：顯示菜單 → 執行操作 → 重複
+}
+```
+
+#### 操作流程
+1. 使用者選擇菜單選項 (1-4)
+2. 如果選擇 1 (查看餘額)：
+   - 呼叫 `AccountManager.viewBalance()`
+   - 使用 `AccountManager.formatBalance()` 格式化輸出
+   - 顯示結果
+3. 如果選擇 2 (存入)：
+   - 使用 `getAmountInput()` 驗證使用者輸入
+   - 呼叫 `AccountManager.creditAccount(amount)`
+   - 顯示結果訊息
+4. 如果選擇 3 (提款)：
+   - 使用 `getAmountInput()` 驗證使用者輸入
+   - 呼叫 `AccountManager.debitAccount(amount)`
+   - 顯示結果訊息（成功或失敗）
+5. 如果選擇 4 (退出)：
+   - 終止主迴圈
+
+### 測試適配器 (向後相容)
+
+**檔案**: `src/accounting/index.js` (DataProgram 和 Operations 類)
+
+為了保持與現有測試套件的相容性，提供了薄封裝的適配器：
+
+```javascript
+class DataProgram {
+  // 適配器：委派到 AccountManager
+  read()          // → manager.viewBalance()
+  write(balance)  // → manager.resetBalance(balance)
+}
+
+class Operations {
+  // 適配器：委派到 AccountManager
+  total()                  // 顯示格式化的餘額
+  formatBalance(balance)   // → formatter.formatBalance(balance)
+}
+```
+
+這些類完全委派到 `AccountManager`，不包含任何業務邏輯。
+
+### 架構對比
+
+#### COBOL 原始架構
+```
+┌─────────────────┐
+│   main.cob      │ ← 使用者介面層
+│  (主程式)        │
+└────────┬────────┘
+         │ CALL
+         ↓
+┌─────────────────┐
+│ operations.cob  │ ← 業務邏輯層
+│  (業務處理)      │
+└────────┬────────┘
+         │ CALL
+         ↓
+┌─────────────────┐
+│   data.cob      │ ← 資料存取層
+│  (資料管理)      │
+└─────────────────┘
+```
+
+#### Node.js 現代化架構
+```
+┌──────────────────────────────┐
+│    CLI Entry Point           │
+│    (npm start)               │
+│    MainProgram.run()         │
+└────────────┬─────────────────┘
+             │
+             ↓
+┌──────────────────────────────┐
+│  User Input Processing       │
+│  Menu Display                │
+│  Input Validation            │
+│  Output Formatting           │
+└────────────┬─────────────────┘
+             │ delegates
+             ↓
+┌──────────────────────────────┐
+│ AccountManager Library       │
+│ (Pure Business Logic)        │
+│                              │
+│ • viewBalance()              │
+│ • creditAccount(amt)         │
+│ • debitAccount(amt)          │
+│ • formatBalance(amt)         │
+│ • resetBalance(amt)          │
+└────────────┬─────────────────┘
+             │
+             ↓
+┌──────────────────────────────┐
+│  In-Memory Storage           │
+│  (this.balance)              │
+└──────────────────────────────┘
+```
+
+### 數據流程
+
+#### 查看餘額 (View Balance)
+```
+MainProgram.displayMenu()
+    ↓ 使用者選擇 1
+getAmountInput() [不需要輸入]
+    ↓
+AccountManager.viewBalance()
+    ↓ 返回 balance 值
+AccountManager.formatBalance(balance)
+    ↓ 返回格式化字串 (例: "001000.00")
+console.log("Current balance: 001000.00")
+    ↓
+返回選單
+```
+
+#### 存入 (Credit) / 提款 (Debit)
+```
+MainProgram.displayMenu()
+    ↓ 使用者選擇 2 或 3
+getAmountInput(prompt)
+    ↓ 驗證並返回有效金額
+AccountManager.creditAccount(amount)
+或 AccountManager.debitAccount(amount)
+    ↓ 返回 {success, message, balance}
+console.log(result.message)
+    ↓ 顯示交易結果
+返回選單
+```
+
+---
+
+## 映射表：COBOL → Node.js
+
+| COBOL 元素 | 位置 | Node.js 對應 | 位置 |
+|---|---|---|---|
+| **main.cob** | 主程式檔案 | **MainProgram 類** | index.js |
+| main.cob 菜單邏輯 | | displayMenu() 方法 | index.js |
+| main.cob 迴圈控制 | | run() 方法 & continueFlag | index.js |
+| **operations.cob** | 業務邏輯檔案 | **AccountManager 類** | AccountManager.js |
+| TOTAL 操作 | operations.cob | viewBalance() | AccountManager.js |
+| CREDIT 操作 | operations.cob | creditAccount() | AccountManager.js |
+| DEBIT 操作 | operations.cob | debitAccount() | AccountManager.js |
+| 輸入提示 & 金額驗證 | operations.cob | getAmountInput() | index.js |
+| 格式化輸出 | operations.cob | formatBalance() | AccountManager.js |
+| **data.cob** | 資料層檔案 | **AccountManager.balance 屬性** | AccountManager.js |
+| READ 操作 | data.cob | viewBalance() | AccountManager.js |
+| WRITE 操作 | data.cob | resetBalance() | AccountManager.js |
+| STORAGE-BALANCE | data.cob | this.balance | AccountManager.js |
+
+---
+
+## 業務規則保留驗證
+
+### ✅ 初始化
+- 每個帳戶創建時自動獲得 1000.00 初始餘額 ✓
+- `new AccountManager()` 預設初始值為 1000.00
+
+### ✅ 餘額限制
+- 最小餘額：0.00（防止透支） ✓
+  - `debitAccount()` 檢查: `if (finalBalance < 0) return {success: false}`
+- 最大餘額：999,999.99（COBOL PIC 9(6)V99） ✓
+  - `creditAccount()` 檢查: `if (newBalance > MAX_BALANCE) return {success: false}`
+  - `formatBalance()` 封頂: `Math.min(balance, MAX_BALANCE)`
+
+### ✅ 精確度
+- 所有金額保留 2 位小數 ✓
+  - `newBalance = parseFloat(newBalance.toFixed(2))`
+  - 輸出格式: `balance.toFixed(2)`
+
+### ✅ 格式化輸出
+- COBOL 風格格式 (9 字元) ✓
+  - 6 位整數（左邊補零）+ 小數點 + 2 位小數
+  - 範例: `001000.00`, `000050.25`, `999999.99`
+
+### ✅ 交易原子性
+- 每次交易完整: 讀取 → 驗證 → 計算 → 寫入 ✓
+- 失敗的交易不修改狀態
+
+### ✅ 操作結果返回
+- 成功交易返回結構化物件 ✓
+  ```javascript
+  {
+    success: true,
+    message: "Amount credited. New balance: 001100.00",
+    balance: 1100.00
+  }
+  ```
+- 失敗交易返回清晰錯誤訊息 ✓
+  ```javascript
+  {
+    success: false,
+    message: "Insufficient funds for this debit.",
+    balance: 1000.00  // 餘額未改變
+  }
+  ```
+
+---
+
+## 執行方式
+
+### 開發環境啟動
+
+```bash
+cd src/accounting
+npm install
+npm start
+```
+
+### 執行測試
+
+```bash
+# 單元測試 (AccountManager)
+npx jest AccountManager.test.js
+
+# 整合測試 (DataProgram & Operations)
+npx jest index.test.js
+
+# 所有測試
+npx jest
+```
+
+### 測試涵蓋
+
+- **TC-001 ~ TC-040**: 所有功能、邊界值、錯誤處理、整合測試都包含在 Jest 測試中
+- **AccountManager.test.js**: 40 個測試案例對應 TESTPLAN.md
+- **index.test.js**: 測試適配器層的相容性
+
+---
 
 1. **帳戶初始化**
    - 每個學生帳戶創建時自動獲得 1000.00 的初始餘額
