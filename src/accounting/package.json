@@ -8,10 +8,16 @@
     "test": "node test.js",
     "test:interactive": "node test-interactive.js"
   },
-  "keywords": ["accounting", "management"],
+  "keywords": [
+    "accounting",
+    "management"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
     "readline-sync": "^1.4.10"
+  },
+  "devDependencies": {
+    "jest": "^30.2.0"
   }
 }

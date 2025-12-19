@@ -257,8 +257,19 @@ describe('AccountManager - Student Account Management System', () => {
       account = new AccountManager(1.00);
       const result = account.creditAccount(999999.00);
       
+      // Should fail because 1.00 + 999999.00 = 1000000.00 exceeds MAX_BALANCE (999999.99)
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('exceed maximum allowed balance');
+      expect(result.balance).toBe(1.00); // Balance should remain unchanged
+    });
+
+    test('TC-022b: Credit to exactly maximum balance', () => {
+      account = new AccountManager(1.00);
+      const result = account.creditAccount(999998.99);
+      
+      // Should succeed: 1.00 + 999998.99 = 999999.99 (exactly at MAX_BALANCE)
       expect(result.success).toBe(true);
-      expect(result.balance).toBe(1000000.00);
+      expect(result.balance).toBe(999999.99);
     });
 
     // TC-023: 提取金額等於當前餘額

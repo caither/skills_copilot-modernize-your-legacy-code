@@ -28,6 +28,7 @@ class AccountManager {
   creditAccount(amount) {
     // Parse the amount to ensure it's a number with 2 decimal places
     const parsedAmount = parseFloat(amount);
+    const MAX_BALANCE = 999999.99; // Match COBOL PIC 9(6)V99 total balance limit
     
     // Validate amount
     if (isNaN(parsedAmount)) {
@@ -46,8 +47,18 @@ class AccountManager {
       };
     }
 
+    // Check if credit would exceed maximum balance
+    const newBalance = this.balance + parsedAmount;
+    if (newBalance > MAX_BALANCE) {
+      return {
+        success: false,
+        message: `Credit would exceed maximum allowed balance of ${this.formatBalance(MAX_BALANCE)}. Transaction cancelled.`,
+        balance: this.balance
+      };
+    }
+
     // Add amount to balance
-    this.balance = parseFloat((this.balance + parsedAmount).toFixed(2));
+    this.balance = parseFloat(newBalance.toFixed(2));
     
     return {
       success: true,
@@ -102,9 +113,11 @@ class AccountManager {
   }
 
   /**
-   * Format balance to match COBOL output format (6 digits with 2 decimals)
+   * Format balance to match COBOL output format
+   * COBOL PIC 9(6)V99 format: 6 digits for whole number (padded with leading zeros), 
+   * plus decimal point and 2 decimal places = 9 characters total (e.g., 001000.00)
    * @param {number} balance - Balance to format
-   * @returns {string} Formatted balance string
+   * @returns {string} Formatted balance string (9 characters)
    */
   formatBalance(balance) {
     const balanceStr = balance.toFixed(2);

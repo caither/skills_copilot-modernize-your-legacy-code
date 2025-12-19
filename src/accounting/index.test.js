@@ -41,21 +41,21 @@ describe('Account Management System - Core Functionality Tests', () => {
     });
 
     // Test 5: Debit Operation (insufficient funds - overdraft protection)
-    test('should prevent overdraft when insufficient funds', () => {
+    // Note: This test verifies data layer behavior. Overdraft protection logic
+    // is implemented in the Operations layer, not in DataProgram.
+    test('should maintain balance when insufficient funds check prevents overdraft', () => {
       const dataProgram = new DataProgram();
       const balance = dataProgram.read();
       expect(balance).toBe(1000.00);
       
       const attemptDebit = 2000.00;
-      // Overdraft protection - should not debit
+      // Simulating the overdraft protection check that would be in Operations layer
       if (balance >= attemptDebit) {
-        // Should not reach here
-        expect(true).toBe(false);
-      } else {
-        // Balance should remain unchanged
-        const finalBalance = dataProgram.read();
-        expect(finalBalance).toBe(1000.00);
+        dataProgram.write(balance - attemptDebit);
       }
+      // Balance should remain unchanged because the check prevented the write
+      const finalBalance = dataProgram.read();
+      expect(finalBalance).toBe(1000.00);
     });
 
     // Test 6: Decimal Precision
@@ -264,8 +264,8 @@ describe('Account Management System - Core Functionality Tests', () => {
       const balance = dataProgram.read();
       expect(balance).toBe(1000.00);
 
-      // Debit exact balance
-      dataProgram.write(balance - balance);
+      // Debit exact balance to zero
+      dataProgram.write(0.00);
       expect(dataProgram.read()).toBe(0.00);
     });
 
