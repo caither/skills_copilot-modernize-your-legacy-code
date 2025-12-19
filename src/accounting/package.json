@@ -1,12 +1,12 @@
 {
-  "name": "student-account-management",
+  "name": "account-management",
   "version": "1.0.0",
-  "description": "Student Account Management System - Modernized from COBOL",
+  "description": "Account Management System - Modernized from COBOL",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
-  "keywords": ["accounting", "student", "management"],
+  "keywords": ["accounting", "management"],
   "author": "",
   "license": "MIT",
   "dependencies": {
