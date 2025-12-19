@@ -1,5 +1,5 @@
 /**
- * Student Account Management System
+ * Account Management System
  * Modernized from COBOL legacy system
  * 
  * This application preserves the original business logic:
