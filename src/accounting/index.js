@@ -90,14 +90,33 @@ class Operations {
     getAmountInput(prompt) {
         const MAX_AMOUNT = 999999.99; // Match COBOL PIC 9(6)V99 limit
         let amount;
+        let isValid = false;
         do {
             const input = readlineSync.question(prompt);
-            amount = parseFloat(input);
-            if (isNaN(amount) || !Number.isFinite(amount) || amount < 0 || amount > MAX_AMOUNT) {
-                console.log(`Invalid amount. Please enter a positive number between 0 and ${MAX_AMOUNT}.`);
-                amount = -1;
+            const trimmedInput = input.trim();
+
+            // Check for empty or whitespace-only input
+            if (trimmedInput === '') {
+                console.log('Invalid amount format. Please enter a numeric value.');
+                continue;
             }
-        } while (amount < 0);
+
+            amount = parseFloat(trimmedInput);
+
+            // Check for non-numeric or non-finite values
+            if (isNaN(amount) || !Number.isFinite(amount)) {
+                console.log('Invalid amount format. Please enter a numeric value.');
+                continue;
+            }
+
+            // Check for out-of-range numeric values
+            if (amount < 0 || amount > MAX_AMOUNT) {
+                console.log(`Invalid amount. Please enter a positive number between 0 and ${MAX_AMOUNT}.`);
+                continue;
+            }
+
+            isValid = true;
+        } while (!isValid);
         return amount;
     }
 
