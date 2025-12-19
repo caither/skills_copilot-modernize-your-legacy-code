@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Automated test script for the Student Account Management System
+ * Automated test script for the Account Management System
  * Tests all functionality to match the COBOL legacy system behavior
  * 
  * Note: This uses console.assert for simplicity in demonstration.
