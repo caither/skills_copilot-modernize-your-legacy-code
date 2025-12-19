@@ -1,4 +1,4 @@
-# Student Account Management System
+# Account Management System
 
 This is a Node.js application modernized from a COBOL legacy system. It provides account management functionality with the following features:
 
