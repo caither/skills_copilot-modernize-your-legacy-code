@@ -59,8 +59,16 @@ class Operations {
      */
     credit() {
         const amount = this.getAmountInput('Enter credit amount: ');
+        const MAX_BALANCE = 999999.99; // Match COBOL PIC 9(6)V99 total balance limit
         let finalBalance = this.dataProgram.read();
-        finalBalance += amount;
+        const newBalance = finalBalance + amount;
+
+        if (newBalance > MAX_BALANCE) {
+            console.log(`Credit would exceed maximum allowed balance of ${this.formatBalance(MAX_BALANCE)}. Transaction cancelled.`);
+            return;
+        }
+
+        finalBalance = newBalance;
         this.dataProgram.write(finalBalance);
         console.log(`Amount credited. New balance: ${this.formatBalance(finalBalance)}`);
     }
