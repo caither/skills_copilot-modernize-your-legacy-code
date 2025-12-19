@@ -1,14 +1,24 @@
 {
-  "name": "accounting",
+  "name": "account-management",
   "version": "1.0.0",
+  "description": "Account Management System - Modernized from COBOL with Jest tests",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "start": "node index.js",
+    "test": "jest",
+    "test:coverage": "jest --coverage"
   },
-  "keywords": [],
+  "keywords": [
+    "accounting",
+    "management",
+    "cobol",
+    "modernization"
+  ],
   "author": "",
-  "license": "ISC",
-  "description": "",
+  "license": "MIT",
+  "dependencies": {
+    "readline-sync": "^1.4.10"
+  },
   "devDependencies": {
     "jest": "^30.2.0"
   }

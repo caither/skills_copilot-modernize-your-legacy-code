@@ -1,18 +1,30 @@
-# Accounting System - Node.js Implementation
+# Account Management System - Node.js Implementation
 
-This directory contains a Node.js implementation of the Student Account Management System, originally written in COBOL, along with comprehensive unit tests.
+This directory contains a Node.js implementation of the Student Account Management System, originally written in COBOL, along with comprehensive Jest unit tests.
 
 ## Overview
 
-The AccountManager module provides the core functionality for managing student accounts:
+This implementation provides two approaches to the account management system:
+
+1. **index.js** - Direct port from COBOL with DataProgram, Operations, and MainProgram classes
+2. **AccountManager.js** - Alternative implementation with simplified API
+
+Both implementations provide the core functionality for managing student accounts:
 - **View Balance**: Check the current account balance
 - **Credit Account**: Deposit money into the account
 - **Debit Account**: Withdraw money from the account
 
 ## Files
 
-- `AccountManager.js` - Core business logic module
-- `AccountManager.test.js` - Comprehensive unit tests (42 test cases)
+### Core Application
+- `index.js` - Main application (direct COBOL port with readline-sync interface)
+- `AccountManager.js` - Alternative implementation with simplified API
+
+### Test Files
+- `index.test.js` - Jest tests for index.js (30 test cases)
+- `AccountManager.test.js` - Jest tests for AccountManager.js (42 test cases)
+
+### Configuration
 - `package.json` - Node.js project configuration
 - `package-lock.json` - Dependency lock file
 
@@ -29,57 +41,85 @@ Install the required dependencies:
 npm install
 ```
 
-This will install Jest, the testing framework used for unit tests.
+This will install:
+- **Jest** - Testing framework for unit tests
+- **readline-sync** - For interactive CLI input (used by index.js)
+
+## Running the Application
+
+To run the interactive CLI application:
+
+```bash
+npm start
+```
+
+This will start the menu-driven interface matching the COBOL application.
 
 ## Running Tests
 
-To run all unit tests:
+To run all Jest unit tests:
 
 ```bash
 npm test
 ```
 
-For verbose output:
-
-```bash
-npm test -- --verbose
-```
-
 For test coverage:
 
 ```bash
-npm test -- --coverage
+npm run test:coverage
 ```
 
 ## Test Coverage
 
-The test suite includes 42 comprehensive test cases that mirror the scenarios documented in `docs/TESTPLAN.md`:
+The test suite includes 72 comprehensive test cases across two implementations:
 
-### Functional Tests (13 tests)
-- **View Balance**: 3 tests (TC-001 to TC-003)
-- **Credit/Deposit**: 5 tests (TC-004 to TC-008)
-- **Debit/Withdrawal Success**: 5 tests (TC-009 to TC-013)
-- **Debit/Withdrawal Failure**: 4 tests (TC-014 to TC-017)
+### index.test.js (30 tests)
+Tests for the DataProgram and Operations classes:
+- **DataProgram Tests**: Initial balance, credit/debit operations, decimal precision, multiple operations
+- **Operations Tests**: Balance formatting, COBOL output format compliance
+- **Interactive Menu Simulation**: Complete workflow tests
+- **Business Logic Validation**: Overdraft protection, precision handling
+- **COBOL Legacy Equivalence**: Read/Write operations, format matching
 
-### Boundary Value Tests (8 tests)
-- **Amount Boundaries**: 6 tests (TC-018 to TC-023)
-- **System State Boundaries**: 2 tests (TC-024 to TC-025)
+### AccountManager.test.js (42 tests)
+Tests mirroring scenarios from `docs/TESTPLAN.md`:
+- **Functional Tests**: View balance, credit, debit operations
+- **Boundary Value Tests**: Min/max amounts, edge cases
+- **Error Handling Tests**: Invalid inputs, precision
+- **Integration Tests**: Complete workflows, system operations
 
-### Error Handling Tests (5 tests)
-- **Invalid Input**: 2 tests (TC-030 to TC-031)
-- **Data Precision**: 3 tests (TC-032 to TC-034)
+## Usage Examples
 
-### Integration Tests (9 tests)
-- **Complete Workflows**: 3 tests (TC-035 to TC-037)
-- **System Operations**: 2 tests (TC-038, TC-040)
-- **Additional Validation**: 7 extra tests
+### Using index.js (COBOL-style)
 
-## Usage Example
+```javascript
+const { DataProgram, Operations } = require('./index');
+
+// Create instances
+const dataProgram = new DataProgram();
+const operations = new Operations(dataProgram);
+
+// View balance
+operations.total(); // Outputs: Current balance: 001000.00
+
+// Credit account
+dataProgram.write(dataProgram.read() + 500.00);
+operations.total(); // Outputs: Current balance: 001500.00
+
+// Debit account (with overdraft protection)
+const balance = dataProgram.read();
+if (balance >= 200.00) {
+  dataProgram.write(balance - 200.00);
+}
+operations.total(); // Outputs: Current balance: 001300.00
+```
+
+### Using AccountManager.js (Simplified API)
 
 ```javascript
 const AccountManager = require('./AccountManager');
 
-// Create a new account with initial balance of 1000.00
+// Create a new account
 const account = new AccountManager();
 
 // View balance
@@ -103,12 +143,15 @@ console.log(overdraft.message); // "Insufficient funds for this debit."
 1. **Prevents Overdraft**: The system ensures that withdrawals cannot exceed the current balance
 2. **Initial Balance**: New accounts automatically start with 1000.00
 3. **Precision Control**: All amounts are maintained with 2 decimal places
-4. **Transaction Atomicity**: All operations are complete and atomic
-5. **Data Consistency**: Balance queries always return the current accurate balance
+4. **COBOL Format Output**: Balance displayed in 9-character format (e.g., 001000.00)
+5. **Interactive CLI**: Menu-driven interface matching the COBOL application
+6. **Transaction Atomicity**: All operations are complete and atomic
+7. **Data Consistency**: Balance queries always return the current accurate balance
 
 ## Business Rules
 
 - Initial account balance: **1000.00**
+- Maximum balance: **999999.99** (COBOL PIC 9(6)V99 limit)
 - Minimum transaction amount: **0.01**
 - All amounts are stored with **2 decimal places**
 - Overdrafts are **not permitted**
@@ -116,33 +159,48 @@ console.log(overdraft.message); // "Insufficient funds for this debit."
 
 ## Test Results
 
-All 42 tests pass successfully:
+All 72 tests pass successfully:
 
 ```
-Test Suites: 1 passed, 1 total
-Tests:       42 passed, 42 total
+Test Suites: 2 passed, 2 total
+Tests:       72 passed, 72 total
 Snapshots:   0 total
-Time:        0.425 s
+Time:        0.541 s
 ```
 
 ## COBOL to Node.js Mapping
 
 | COBOL Program | Node.js Equivalent | Description |
 |--------------|-------------------|-------------|
-| DataProgram | AccountManager.balance | Manages storage balance |
-| Operations | AccountManager methods | Handles credit/debit operations |
-| MainProgram | (not implemented) | Menu-driven CLI interface |
+| DataProgram | DataProgram class (index.js) | Manages storage balance |
+| Operations | Operations class (index.js) | Handles credit/debit operations and formatting |
+| MainProgram | MainProgram class (index.js) | Menu-driven CLI interface |
+| - | AccountManager class | Alternative simplified implementation |
 
-## Future Enhancements
+## Architecture
 
-Potential improvements for this implementation:
+### index.js Structure (Direct COBOL Port)
+```
+MainProgram
+  ├── DataProgram (data layer)
+  │   ├── read() - Retrieves balance
+  │   └── write() - Updates balance
+  └── Operations (business logic)
+      ├── total() - View balance
+      ├── credit() - Add to balance
+      ├── debit() - Subtract from balance
+      └── formatBalance() - COBOL format output
+```
 
-1. Add a CLI interface matching the COBOL MainProgram menu system
-2. Implement persistent storage (file or database)
-3. Add transaction history logging
-4. Support multiple accounts
-5. Add interest calculation features
-6. Implement account types (checking, savings, etc.)
+### AccountManager.js Structure (Simplified)
+```
+AccountManager
+  ├── viewBalance() - Returns current balance
+  ├── creditAccount(amount) - Adds amount with validation
+  ├── debitAccount(amount) - Subtracts amount with overdraft protection
+  ├── formatBalance(balance) - Formats to COBOL output
+  └── resetBalance() - Resets to initial or specified balance
+```
 
 ## Related Documentation
 
@@ -151,4 +209,4 @@ Potential improvements for this implementation:
 
 ## License
 
-ISC
+MIT
