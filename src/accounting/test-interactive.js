@@ -5,7 +5,7 @@
  * Simulates user interactions with the menu system
  */
 
-const { MainProgram, Operations, DataProgram } = require('./index.js');
+const { Operations, DataProgram } = require('./index.js');
 
 console.log('=== Interactive Simulation Test ===\n');
 console.log('This test simulates the interactive menu system:\n');
